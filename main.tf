@@ -3,6 +3,10 @@ provider "aws" {
   region = "ap-southeast-1"
 }
 
+######################
+# S3 Bucket and config
+######################
+
 resource "aws_s3_bucket" "test_bucket" {
   bucket = "my-test-bucket-ginderick123"
 
@@ -24,6 +28,40 @@ resource "aws_s3_object" "for_processing" {
 
 }
 
+resource "aws_s3_bucket_notification" "bucket_notification" {
+  bucket = aws_s3_bucket.test_bucket.id
+
+  lambda_function {
+    lambda_function_arn = aws_lambda_function.test_lambda.arn
+    events              = ["s3:ObjectCreated:*"]
+    filter_prefix       = "new_upload/"
+  }
+
+  depends_on = [aws_lambda_permission.allow_bucket]
+
+}
+
+######################
+# Lambda Function
+######################
+
+data "archive_file" "zip_python_code" {
+  type        = "zip"
+  source_dir  = "${path.module}/python/"
+  output_path = "${path.module}/python/hello-pythonv1-1.zip"
+}
+
+resource "aws_lambda_function" "test_lambda" {
+  filename      = "${path.module}/python/hello-pythonv1-1.zip"
+  function_name = "example_lambda_name"
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "hello-python.lambda_handler"
+  runtime       = "python3.8"
+  depends_on    = []
+
+}
+
+
 data "aws_iam_policy_document" "assume_role" {
   statement {
     effect = "Allow"
@@ -38,11 +76,9 @@ data "aws_iam_policy_document" "assume_role" {
 
 }
 
-resource "aws_cloudwatch_log_group" "function_log_group" {
-  name = "/aws/lambda/${aws_lambda_function.test_lambda.function_name}"
-
-
-}
+######################
+# Lambda Function Role
+######################
 
 resource "aws_iam_role" "iam_for_lambda" {
   name               = "iam_for_lambda"
@@ -90,32 +126,12 @@ resource "aws_lambda_permission" "allow_bucket" {
 
 }
 
+######################
+# Cloudwatch
+######################
 
-data "archive_file" "zip_python_code" {
-  type        = "zip"
-  source_dir  = "${path.module}/python/"
-  output_path = "${path.module}/python/hello-pythonv1-1.zip"
-}
+resource "aws_cloudwatch_log_group" "function_log_group" {
+  name = "/aws/lambda/${aws_lambda_function.test_lambda.function_name}"
 
-resource "aws_lambda_function" "test_lambda" {
-  filename      = "${path.module}/python/hello-pythonv1-1.zip"
-  function_name = "example_lambda_name"
-  role          = aws_iam_role.iam_for_lambda.arn
-  handler       = "hello-python.lambda_handler"
-  runtime       = "python3.8"
-  depends_on    = []
-
-}
-
-resource "aws_s3_bucket_notification" "bucket_notification" {
-  bucket = aws_s3_bucket.test_bucket.id
-
-  lambda_function {
-    lambda_function_arn = aws_lambda_function.test_lambda.arn
-    events              = ["s3:ObjectCreated:*"]
-    filter_prefix       = "new_upload/"
-  }
-
-  depends_on = [aws_lambda_permission.allow_bucket]
 
 }
