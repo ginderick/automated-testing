@@ -137,6 +137,54 @@ resource "aws_cloudwatch_log_group" "function_log_group" {
 }
 
 ######################
+# DynamoDB
+######################
+resource "aws_dynamodb_table" "basic-dynamodb-table" {
+  name         = "APIList"
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "APIName"
+  range_key    = "Environment"
+
+  attribute {
+    name = "APIName"
+    type = "S"
+  }
+
+  attribute {
+    name = "Environment"
+    type = "S"
+  }
+
+  attribute {
+    name = "Status"
+    type = "S"
+  }
+
+
+  global_secondary_index {
+    name            = "StatusIndex"
+    hash_key        = "Status"
+    range_key       = "Environment"
+    projection_type = "KEYS_ONLY"
+  }
+
+  tags = {
+    Name        = "dynamodb-table-1"
+    Environment = "production"
+  }
+}
+
+
+
+
+######################
 # EventBridge
 ######################
+
+
+
+
+
+
+
 
