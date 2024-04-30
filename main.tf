@@ -154,8 +154,10 @@ resource "aws_lambda_permission" "allow_bucket" {
 
 resource "aws_cloudwatch_log_group" "function_log_group" {
   name = "/aws/lambda/${aws_lambda_function.test_lambda.function_name}"
+}
 
-
+resource "aws_cloudwatch_log_group" "function_log_group2" {
+  name = "/aws/lambda/${aws_lambda_function.test_lambda2.function_name}"
 }
 
 ######################
@@ -216,6 +218,13 @@ resource "aws_cloudwatch_event_target" "example" {
 
 }
 
+resource "aws_lambda_permission" "allow_cloudwatch_to_call_check_foo" {
+  statement_id  = "AllowExecutionFromCloudWatch"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.test_lambda2.function_name
+  principal     = "events.amazonaws.com"
+  source_arn    = aws_cloudwatch_event_rule.example.arn
+}
 
 
 
