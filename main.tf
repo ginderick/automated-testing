@@ -42,7 +42,7 @@ resource "aws_s3_bucket_notification" "bucket_notification" {
 }
 
 ######################
-# Lambda Function
+# Lambda Function 1
 ######################
 
 data "archive_file" "zip_python_code" {
@@ -75,6 +75,27 @@ data "aws_iam_policy_document" "assume_role" {
   }
 
 }
+
+######################
+# Lambda Function 2
+######################
+
+data "archive_file" "zip_python_code2" {
+  type        = "zip"
+  source_dir  = "${path.module}/python/"
+  output_path = "${path.module}/python/hello-pythonv1-1.zip"
+}
+
+resource "aws_lambda_function" "test_lambda2" {
+  filename      = "${path.module}/python/hello-pythonv1-1.zip"
+  function_name = "lambda2"
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "hello-python.lambda_handler"
+  runtime       = "python3.8"
+  depends_on    = []
+
+}
+
 
 ######################
 # Lambda Function Role
@@ -125,6 +146,7 @@ resource "aws_lambda_permission" "allow_bucket" {
   source_arn    = aws_s3_bucket.test_bucket.arn
 
 }
+
 
 ######################
 # Cloudwatch
@@ -180,7 +202,19 @@ resource "aws_dynamodb_table" "basic-dynamodb-table" {
 ######################
 # EventBridge
 ######################
+resource "aws_cloudwatch_event_rule" "example" {
+  name                = "invoke-lambda-function2"
+  description         = "Invoke lambda function 2 every 35 mins"
+  schedule_expression = "rate(2 minutes)"
 
+}
+
+resource "aws_cloudwatch_event_target" "example" {
+  arn       = aws_lambda_function.test_lambda2.arn
+  rule      = aws_cloudwatch_event_rule.example.id
+  target_id = aws_lambda_function.test_lambda2.function_name
+
+}
 
 
 
