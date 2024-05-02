@@ -52,7 +52,7 @@ data "archive_file" "zip_python_code" {
 }
 
 resource "aws_lambda_function" "csv_processor" {
-  filename      = "${path.module}/python/hello-pythonv1-2.zip"
+  filename      = "${path.module}/python-csv-processor/python-csv-processor.zip"
   function_name = "lambda_csv_processor"
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "hello-python.lambda_handler"
