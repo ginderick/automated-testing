@@ -132,6 +132,13 @@ resource "aws_iam_policy" "function_logging_policy" {
           "s3:GetObject"
         ],
         "Resource" : "arn:aws:s3:::*/*"
+      },
+      {
+        "Effect" : "Allow",
+        "Action" : [
+          "dynamodb:PutItem"
+        ],
+        "Resource" : aws_dynamodb_table.basic-dynamodb-table.arn
       }
     ]
   })

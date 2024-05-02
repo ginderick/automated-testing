@@ -24,17 +24,17 @@ def lambda_handler(event, context):
 def get_csv_contents(bucket_name: str, key: str):
     response = s3_client.get_object(Bucket=bucket_name, Key=key)
 
-    csv_content = response["Body"].read().decode("utf-8")
+    csv_content = response["Body"].read().decode("utf-8").splitlines()
     return csv_content
 
 
-def write_data_to_dynamodb(csv_content: str):
+def write_data_to_dynamodb(csv_content):
     lines = csv.reader(csv_content)
     for line in lines:
-        data = line.strip().split(",")
-        api = data[0].strip('"')
-        environment = data[1].strip('"')
-        status = data[2].strip('"')
+        logger.info(line)
+        api = line[0].strip('"')
+        environment = line[1].strip('"')
+        status = line[2].strip('"')
 
         put_item_in_dynamodb("APIList", api, environment, status)
 
@@ -60,7 +60,7 @@ def put_item_in_dynamodb(table_name: str, api: str, environment: str, status: st
         logger.error(e)
 
 
-def get_s3_info(event) -> tuple[str, str]:
+def get_s3_info(event):
     s3 = event["Records"][0]["s3"]
     s3_key = s3["object"]["key"]
     s3_bucket_name = s3["bucket"]["name"]
