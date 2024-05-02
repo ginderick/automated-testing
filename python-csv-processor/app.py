@@ -1,17 +1,21 @@
 import csv
 import logging
 import boto3
+import os
 
-logger = logging.getLogger("csv-processor")
-logger.setLevel("INFO")
+logging_level = os.environ["LOGGING_LEVEL"]
+
+logger = logging.getLogger()
+logger.setLevel(logging_level)
 
 dynamodb_client = boto3.client("dynamodb")
 
 
 def lambda_handler(event, context):
     logger.debug(f"Event: {event}")
-    logger.debug(f"Context: {context}")
+    logger.debug()(f"Context: {context}")
     s3_location = get_s3_location(event)
+    write_data_to_dynamodb(s3_location)
 
 
 def write_data_to_dynamodb(s3_location: str):
