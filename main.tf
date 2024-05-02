@@ -88,13 +88,13 @@ data "aws_iam_policy_document" "assume_role" {
 
 data "archive_file" "zip_python_code2" {
   type        = "zip"
-  source_dir  = "${path.module}/python/"
-  output_path = "${path.module}/python/hello-pythonv1-2.zip"
+  source_dir  = "${path.module}/python-get-api/"
+  output_path = "${path.module}/python-get-api/get-api.zip"
 }
 
-resource "aws_lambda_function" "csv_processor2" {
-  filename      = "${path.module}/python/hello-pythonv1-2.zip"
-  function_name = "lambda2"
+resource "aws_lambda_function" "get_api" {
+  filename      = "${path.module}/python-get-api/get-api.zip"
+  function_name = "get_api"
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "hello-python.lambda_handler"
   runtime       = "python3.8"
@@ -170,7 +170,7 @@ resource "aws_cloudwatch_log_group" "function_log_group" {
 }
 
 resource "aws_cloudwatch_log_group" "function_log_group2" {
-  name = "/aws/lambda/${aws_lambda_function.csv_processor2.function_name}"
+  name = "/aws/lambda/${aws_lambda_function.get_api.function_name}"
 }
 
 ######################
@@ -225,16 +225,16 @@ resource "aws_cloudwatch_event_rule" "example" {
 }
 
 resource "aws_cloudwatch_event_target" "example" {
-  arn       = aws_lambda_function.csv_processor2.arn
+  arn       = aws_lambda_function.get_api.arn
   rule      = aws_cloudwatch_event_rule.example.id
-  target_id = aws_lambda_function.csv_processor2.function_name
+  target_id = aws_lambda_function.get_api.function_name
 
 }
 
 resource "aws_lambda_permission" "allow_cloudwatch_to_call_check_foo" {
   statement_id  = "AllowExecutionFromCloudWatch"
   action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.csv_processor2.function_name
+  function_name = aws_lambda_function.get_api.function_name
   principal     = "events.amazonaws.com"
   source_arn    = aws_cloudwatch_event_rule.example.arn
 }
