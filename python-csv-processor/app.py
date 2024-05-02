@@ -2,7 +2,7 @@ import csv
 import logging
 import boto3
 
-logger = logging.getLogger()
+logger = logging.getLogger("csv-processor")
 logger.setLevel("INFO")
 
 dynamodb_client = boto3.client("dynamodb")
