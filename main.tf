@@ -32,7 +32,7 @@ resource "aws_s3_bucket_notification" "bucket_notification" {
   bucket = aws_s3_bucket.test_bucket.id
 
   lambda_function {
-    lambda_function_arn = aws_lambda_function.test_lambda.arn
+    lambda_function_arn = aws_lambda_function.csv_processor.arn
     events              = ["s3:ObjectCreated:*"]
     filter_prefix       = "new_upload/"
   }
@@ -51,9 +51,9 @@ data "archive_file" "zip_python_code" {
   output_path = "${path.module}/python/hello-pythonv1-2.zip"
 }
 
-resource "aws_lambda_function" "test_lambda" {
+resource "aws_lambda_function" "csv_processor" {
   filename      = "${path.module}/python/hello-pythonv1-2.zip"
-  function_name = "example_lambda_name"
+  function_name = "lambda_csv_processor"
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "hello-python.lambda_handler"
   runtime       = "python3.8"
@@ -86,7 +86,7 @@ data "archive_file" "zip_python_code2" {
   output_path = "${path.module}/python/hello-pythonv1-2.zip"
 }
 
-resource "aws_lambda_function" "test_lambda2" {
+resource "aws_lambda_function" "csv_processor2" {
   filename      = "${path.module}/python/hello-pythonv1-2.zip"
   function_name = "lambda2"
   role          = aws_iam_role.iam_for_lambda.arn
@@ -141,7 +141,7 @@ resource "aws_iam_role_policy_attachment" "function_logging_policy_attachment" {
 resource "aws_lambda_permission" "allow_bucket" {
   statement_id  = "AllowExecutionFromS3Bucket"
   action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.test_lambda.arn
+  function_name = aws_lambda_function.csv_processor.arn
   principal     = "s3.amazonaws.com"
   source_arn    = aws_s3_bucket.test_bucket.arn
 
@@ -153,11 +153,11 @@ resource "aws_lambda_permission" "allow_bucket" {
 ######################
 
 resource "aws_cloudwatch_log_group" "function_log_group" {
-  name = "/aws/lambda/${aws_lambda_function.test_lambda.function_name}"
+  name = "/aws/lambda/${aws_lambda_function.csv_processor.function_name}"
 }
 
 resource "aws_cloudwatch_log_group" "function_log_group2" {
-  name = "/aws/lambda/${aws_lambda_function.test_lambda2.function_name}"
+  name = "/aws/lambda/${aws_lambda_function.csv_processor2.function_name}"
 }
 
 ######################
@@ -212,16 +212,16 @@ resource "aws_cloudwatch_event_rule" "example" {
 }
 
 resource "aws_cloudwatch_event_target" "example" {
-  arn       = aws_lambda_function.test_lambda2.arn
+  arn       = aws_lambda_function.csv_processor2.arn
   rule      = aws_cloudwatch_event_rule.example.id
-  target_id = aws_lambda_function.test_lambda2.function_name
+  target_id = aws_lambda_function.csv_processor2.function_name
 
 }
 
 resource "aws_lambda_permission" "allow_cloudwatch_to_call_check_foo" {
   statement_id  = "AllowExecutionFromCloudWatch"
   action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.test_lambda2.function_name
+  function_name = aws_lambda_function.csv_processor2.function_name
   principal     = "events.amazonaws.com"
   source_arn    = aws_cloudwatch_event_rule.example.arn
 }
