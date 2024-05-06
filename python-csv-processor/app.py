@@ -2,7 +2,6 @@ import csv
 import logging
 import boto3
 import os
-from io import StringIO
 
 logging_level = os.environ["LOGGING_LEVEL"]
 

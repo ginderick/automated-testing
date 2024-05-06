@@ -41,9 +41,9 @@ resource "aws_s3_bucket_notification" "bucket_notification" {
 
 }
 
-######################
-# Lambda Function 1
-######################
+###############################
+# Lambda Function csv_processor
+###############################
 
 data "archive_file" "zip_python_code" {
   type        = "zip"
@@ -82,9 +82,9 @@ data "aws_iam_policy_document" "assume_role" {
 
 }
 
-######################
-# Lambda Function 2
-######################
+#########################
+# Lambda Function get-api
+#########################
 
 data "archive_file" "zip_python_code2" {
   type        = "zip"
@@ -92,13 +92,19 @@ data "archive_file" "zip_python_code2" {
   output_path = "${path.module}/python-get-api/get-api.zip"
 }
 
-resource "aws_lambda_function" "get_api" {
-  filename      = "${path.module}/python-get-api/get-api.zip"
-  function_name = "get_api"
-  role          = aws_iam_role.iam_for_lambda.arn
-  handler       = "hello-python.lambda_handler"
-  runtime       = "python3.8"
-  depends_on    = []
+resource "aws_lambda_function" "lambda_get_api" {
+  filename         = "${path.module}/python-get-api/get-api.zip"
+  function_name    = "lambda_get_api"
+  role             = aws_iam_role.iam_for_lambda.arn
+  handler          = "app.lambda_handler"
+  runtime          = "python3.8"
+  source_code_hash = data.archive_file.zip_python_code2.output_base64sha256
+  environment {
+    variables = {
+      LOGGING_LEVEL = "INFO"
+    }
+  }
+  depends_on = []
 
 }
 
@@ -136,9 +142,10 @@ resource "aws_iam_policy" "function_logging_policy" {
       {
         "Effect" : "Allow",
         "Action" : [
-          "dynamodb:PutItem"
+          "dynamodb:PutItem",
+          "dynamodb:Query"
         ],
-        "Resource" : aws_dynamodb_table.basic-dynamodb-table.arn
+        "Resource" : ["${aws_dynamodb_table.basic-dynamodb-table.arn}/index/*", aws_dynamodb_table.basic-dynamodb-table.arn]
       }
     ]
   })
@@ -170,7 +177,7 @@ resource "aws_cloudwatch_log_group" "function_log_group" {
 }
 
 resource "aws_cloudwatch_log_group" "function_log_group2" {
-  name = "/aws/lambda/${aws_lambda_function.get_api.function_name}"
+  name = "/aws/lambda/${aws_lambda_function.lambda_get_api.function_name}"
 }
 
 ######################
@@ -225,16 +232,16 @@ resource "aws_cloudwatch_event_rule" "example" {
 }
 
 resource "aws_cloudwatch_event_target" "example" {
-  arn       = aws_lambda_function.get_api.arn
+  arn       = aws_lambda_function.lambda_get_api.arn
   rule      = aws_cloudwatch_event_rule.example.id
-  target_id = aws_lambda_function.get_api.function_name
+  target_id = aws_lambda_function.lambda_get_api.function_name
 
 }
 
 resource "aws_lambda_permission" "allow_cloudwatch_to_call_check_foo" {
   statement_id  = "AllowExecutionFromCloudWatch"
   action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.get_api.function_name
+  function_name = aws_lambda_function.lambda_get_api.function_name
   principal     = "events.amazonaws.com"
   source_arn    = aws_cloudwatch_event_rule.example.arn
 }
