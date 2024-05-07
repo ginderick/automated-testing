@@ -22,36 +22,21 @@ def lambda_handler(event, context):
 
 
 def execute_gitlab_perf_test():
-    # Create a PoolManager instance
-    http = urllib3.PoolManager()
-
-    # Define the URL and headers
     url = "https://gitlab.com/api/v4/projects/54833002/trigger/pipeline"
-    headers = {"PRIVATE-TOKEN": "glptt-c62ee45eb5e9c9d79cb0577e0ca308c71835be73"}
 
-    # Define the form fields
-    encoded_body = json.dumps(
+    encoded_data = json.dumps(
         {
             "token": "glptt-c62ee45eb5e9c9d79cb0577e0ca308c71835be73",
             "ref": "feature/SP0B15-1133",
             "variables[PROJECT_DIR]": "hip-ws-nejb-nrpl25",
-            "variables[PROPERTIES_FILE]": f"hip-ws-nejb-nrpl25/config/rhocp-nft.properties",
+            "variables[PROPERTIES_FILE]": "hip-ws-nejb-nrpl25/config/rhocp-nft.properties",
             "variables[REPORTS_DIR]": "hip-ws-nejb-nrpl25/reports",
             "variables[TEST_TYPE]": "performance",
             "variables[API]": "jmeter.GetDetailsByAttributes.Users=20",
         }
     )
-    http = urllib3.PoolManager()
+    response = urllib3.request(method="POST", url=url, body=encoded_data)
 
-    r = http.request(
-        "POST",
-        "http://localhost:8080/assets",
-        headers={"Content-Type": "application/json"},
-        body=encoded_body,
-    )
-
-    # Send the POST request
-    response = http.request("POST", url, headers=headers, body=encoded_fields)
     logger.info(response)
 
 
