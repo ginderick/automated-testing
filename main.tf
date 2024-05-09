@@ -204,6 +204,20 @@ resource "aws_dynamodb_table" "basic-dynamodb-table" {
     type = "S"
   }
 
+  attribute {
+    name = "Branch"
+    type = "S"
+  }
+
+  attribute {
+    name = "Service"
+    type = "S"
+  }
+
+  attribute {
+    name = "NumberOfUsers"
+    type = "N"
+  }
 
   global_secondary_index {
     name            = "StatusIndex"
