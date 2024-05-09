@@ -3,7 +3,6 @@ import boto3
 import os
 import urllib3
 
-import pkg_resources
 import json
 
 logging_level = os.environ["LOGGING_LEVEL"]
@@ -29,7 +28,9 @@ def lambda_handler(event, context):
     query_api(items)
 
 
-def execute_gitlab_perf_test():
+def execute_gitlab_perf_test(
+    api: str, environment: str, branch: str, service: str, number_of_users: int
+):
     http = urllib3.PoolManager()
     url = "https://gitlab.com/api/v4/projects/54833002/trigger/pipeline"
 
@@ -83,4 +84,11 @@ def query_api(items):
                     aws_count += 1
                 if item["Environment"]["S"] == "rhocp-nft":
                     ocp_count += 1
-                execute_gitlab_perf_test()
+                api = item["APIName"]["S"]
+                environment = item["Environment"]["S"]
+                branch = item["Branch"]["S"]
+                service = item["Service"]["S"]
+                number_of_users = item["NumberOfUsers"]["S"]
+                execute_gitlab_perf_test(
+                    api, environment, branch, service, number_of_users
+                )
