@@ -8,6 +8,12 @@ import json
 
 logging_level = os.environ["LOGGING_LEVEL"]
 
+environment = os.environ["ENVIRONMENT"]
+token = os.environ["TOKEN"]
+branch = os.environ["BRANCH"]
+service = os.environ["SERVICE"]
+api = os.environ["API"]
+number_of_users = os.environ["NUMBER_OF_USERS"]
 
 logger = logging.getLogger()
 logger.setLevel(logging_level)
@@ -29,13 +35,13 @@ def execute_gitlab_perf_test():
 
     encoded_data = json.dumps(
         {
-            "token": "glptt-c62ee45eb5e9c9d79cb0577e0ca308c71835be73",
-            "ref": "develop",
-            "variables[PROJECT_DIR]": "hip-ws-nejb-nrpl25",
-            "variables[PROPERTIES_FILE]": "hip-ws-nejb-nrpl25/config/rhocp-nft.properties",
-            "variables[REPORTS_DIR]": "hip-ws-nejb-nrpl25/reports",
+            "token": token,
+            "ref": branch,
+            "variables[PROJECT_DIR]": service,
+            "variables[PROPERTIES_FILE]": f"{service}/config/{environment}.properties",
+            "variables[REPORTS_DIR]": f"{service}/reports",
             "variables[TEST_TYPE]": "performance",
-            "variables[API]": "jmeter.GetDetailsByAttributes.Users=20",
+            "variables[API]": f"jmeter.{api}.Users={number_of_users}",
         }
     )
     response = http.request(
@@ -43,7 +49,7 @@ def execute_gitlab_perf_test():
     )
 
     result = json.loads(response.data.decode("utf-8"))["json"]
-    logger.info(result)
+    logger.info(response)
 
 
 def get_items_from_dynamodb():
